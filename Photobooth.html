@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Awesome Web Photobooth</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind CSS to use 'Inter' font
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for animations and specific elements not covered by Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #photobooth-container {
+            max-width: 900px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* rounded-3xl */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* shadow-xl */
+            padding: 2.5rem; /* p-10 */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #camera-feed {
+            width: 100%;
+            max-width: 640px; /* Max width for the video feed */
+            height: auto;
+            border-radius: 0.75rem; /* rounded-xl */
+            background-color: #333; /* Placeholder for no camera feed */
+            aspect-ratio: 16 / 9; /* Common video aspect ratio */
+            object-fit: cover;
+            display: none; /* Hidden until camera starts */
+            margin-bottom: 1.5rem; /* mb-6 */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #countdown {
+            font-size: 8rem; /* text-8xl */
+            font-weight: 700; /* font-bold */
+            color: #ef4444; /* text-red-500 */
+            margin-bottom: 1.5rem; /* mb-6 */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            display: none; /* Hidden until countdown starts */
+        }
+
+        .button-primary {
+            /* @apply bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75; */
+            background-color: #4f46e5; /* bg-indigo-600 */
+            color: #ffffff; /* text-white */
+            font-weight: 700; /* font-bold */
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; /* transition */
+            transition-duration: 300ms; /* duration-300 */
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* ease-in-out */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            outline: none; /* focus:outline-none */
+            font-size: 1.25rem; /* text-xl */
+        }
+        .button-primary:hover {
+            background-color: #4338ca; /* hover:bg-indigo-700 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* hover:shadow-lg */
+        }
+        .button-primary:focus {
+            --tw-ring-color: rgba(99, 102, 241, 0.75); /* focus:ring-indigo-500 */
+            --tw-ring-opacity: 0.75; /* focus:ring-opacity-75 */
+            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px var(--tw-ring-color); /* focus:ring-2 */
+        }
+
+
+        .button-secondary {
+            /* @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75; */
+            background-color: #e5e7eb; /* bg-gray-200 */
+            color: #1f2937; /* text-gray-800 */
+            font-weight: 700; /* font-bold */
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; /* transition */
+            transition-duration: 300ms; /* duration-300 */
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* ease-in-out */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            outline: none; /* focus:outline-none */
+            font-size: 1.125rem; /* text-lg */
+        }
+        .button-secondary:hover {
+            background-color: #d1d5db; /* hover:bg-gray-300 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* hover:shadow-lg */
+        }
+        .button-secondary:focus {
+            --tw-ring-color: rgba(156, 163, 175, 0.75); /* focus:ring-gray-400 */
+            --tw-ring-opacity: 0.75; /* focus:ring-opacity-75 */
+            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px var(--tw-ring-color); /* focus:ring-2 */
+        }
+
+        #results-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #photostrip-display {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 1.5rem; /* mt-6 */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+
+        .thumbnail {
+            width: 120px;
+            height: auto;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin: 0.5rem;
+            object-fit: cover;
+        }
+
+        #thumbnails-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Message Box Styling */
+        #message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Pulse animation for countdown */
+        .animate-pulse-once {
+            animation: pulse-once 1s ease-out forwards;
+        }
+
+        @keyframes pulse-once {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-100 to-indigo-200 min-h-screen flex items-center justify-center p-4">
+    <div id="photobooth-container" class="bg-white rounded-3xl shadow-xl p-10 flex flex-col items-center">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-6">📸 Awesome Photobooth!</h1>
+
+        <!-- Camera Feed and Countdown Area -->
+        <div class="relative w-full max-w-2xl mb-6">
+            <video id="camera-feed" class="rounded-xl shadow-lg w-full h-auto" autoplay muted playsinline></video>
+            <div id="countdown" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-red-500 rounded-xl text-8xl font-bold" style="display: none;"></div>
+        </div>
+
+        <!-- Hidden Canvas for Image Processing -->
+        <canvas id="photo-canvas" class="hidden"></canvas>
+
+        <!-- Control Buttons -->
+        <div id="controls" class="space-y-4 md:space-y-0 md:space-x-4 flex flex-col md:flex-row items-center justify-center w-full">
+            <button id="start-button" class="button-primary">Start Photobooth!</button>
+            <button id="retake-button" class="button-secondary hidden">Retake Photos</button>
+            <a id="download-button" class="button-primary hidden" download="photobooth_strip.jpg">Download Strip</a>
+        </div>
+
+        <!-- Results Area -->
+        <div id="results-area" class="w-full mt-8">
+            <div id="thumbnails-container" class="flex flex-wrap justify-center gap-4"></div>
+            <img id="photostrip-display" class="hidden" alt="Your Photostrip">
+        </div>
+
+        <!-- Custom Message Box (instead of alert) -->
+        <div id="message-box" class="hidden"></div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const cameraFeed = document.getElementById('camera-feed');
+        const photoCanvas = document.getElementById('photo-canvas');
+        const startButton = document.getElementById('start-button');
+        const retakeButton = document.getElementById('retake-button');
+        const downloadButton = document.getElementById('download-button');
+        const countdownDisplay = document.getElementById('countdown');
+        const resultsArea = document.getElementById('results-area');
+        const thumbnailsContainer = document.getElementById('thumbnails-container');
+        const photostripDisplay = document.getElementById('photostrip-display');
+        const messageBox = document.getElementById('message-box');
+
+        // Canvas context for drawing
+        const ctx = photoCanvas.getContext('2d');
+
+        // Variables to manage the camera stream and captured photos
+        let mediaStream; // Holds the camera stream
+        let capturedPhotos = []; // Stores Data URLs of individual captured photos
+
+        // Configuration constants for the photobooth process
+        const NUM_PHOTOS = 4; // Number of photos to take for the strip
+        const COUNTDOWN_SECONDS = 3; // Seconds for the countdown before each photo
+        const PHOTO_DISPLAY_DURATION_MS = 800; // How long each captured photo is displayed
+
+        // Photostrip dimensions and text settings
+        const STRIP_WIDTH = 600; // Width of the final photostrip
+        const PHOTO_HEIGHT_ON_STRIP = 400; // Height allocated for each photo within the strip
+        const STRIP_FONT_SIZE = 36; // Font size for text on the photostrip
+        const STRIP_TEXT_COLOR = 'rgb(0, 0, 0)'; // Color of text on the photostrip
+
+        /**
+         * Displays a custom message box instead of using alert().
+         * @param {string} message - The message to display.
+         * @param {number} duration - How long the message should be visible in milliseconds.
+         */
+        function showMessage(message, duration = 2000) {
+            messageBox.textContent = message;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, duration);
+        }
+
+        /**
+         * Initializes the webcam and displays the live feed.
+         */
+        async function startCamera() {
+            try {
+                // Request access to video (webcam)
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraFeed.srcObject = mediaStream; // Set the video element's source to the stream
+                cameraFeed.style.display = 'block'; // Show the video feed
+                startButton.classList.remove('hidden'); // Show the start button
+                showMessage('Camera ready!', 1500);
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                showMessage('Failed to access camera. Please allow access.', 5000);
+                // Hide controls if camera access fails
+                startButton.classList.add('hidden');
+                retakeButton.classList.add('hidden');
+                downloadButton.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Performs a countdown, captures a photo, and displays it briefly.
+         * @returns {Promise<string|null>} A promise that resolves with the Data URL of the captured photo, or null if capture fails.
+         */
+        async function capturePhotoWithCountdown() {
+            // Display countdown
+            countdownDisplay.style.display = 'flex'; // Show countdown display
+            for (let i = COUNTDOWN_SECONDS; i > 0; i--) {
+                countdownDisplay.textContent = i;
+                countdownDisplay.classList.add('animate-pulse-once'); // Add animation class
+                await new Promise(resolve => setTimeout(resolve, 900)); // Wait for animation + slight buffer
+                countdownDisplay.classList.remove('animate-pulse-once'); // Remove class for next pulse
+            }
+            countdownDisplay.textContent = 'Smile!';
+            showMessage('Smile!', 500); // Brief "Smile!" message
+            await new Promise(resolve => setTimeout(resolve, 500)); // Give a moment for "Smile!"
+
+            // Ensure video feed dimensions are available before drawing
+            const videoWidth = cameraFeed.videoWidth;
+            const videoHeight = cameraFeed.videoHeight;
+
+            if (videoWidth === 0 || videoHeight === 0) {
+                console.error("Video dimensions are zero, camera not ready for capture.");
+                showMessage('Camera not ready for capture.', 3000);
+                return null;
+            }
+
+            // Set canvas dimensions to match the video feed
+            photoCanvas.width = videoWidth;
+            photoCanvas.height = videoHeight;
+
+            // Draw the current video frame onto the canvas
+            ctx.drawImage(cameraFeed, 0, 0, videoWidth, videoHeight);
+
+            // Optional: Add a simple white border overlay
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 15;
+            ctx.strokeRect(0, 0, videoWidth, videoHeight);
+
+            // Get the image data as a JPEG Data URL
+            const photoDataUrl = photoCanvas.toDataURL('image/jpeg', 0.9); // 0.9 quality for JPEG
+
+            // Display the captured photo briefly
+            cameraFeed.style.display = 'none'; // Hide live feed
+            photostripDisplay.src = photoDataUrl;
+            photostripDisplay.classList.remove('hidden'); // Show captured photo
+            countdownDisplay.style.display = 'none'; // Hide countdown
+
+            await new Promise(resolve => setTimeout(resolve, PHOTO_DISPLAY_DURATION_MS)); // Display for a short duration
+            photostripDisplay.classList.add('hidden'); // Hide captured photo
+            cameraFeed.style.display = 'block'; // Show live feed again
+
+            return photoDataUrl;
+        }
+
+        /**
+         * Starts the full photobooth capture sequence.
+         */
+        async function startCaptureSequence() {
+            // Reset UI and hide controls
+            startButton.classList.add('hidden');
+            retakeButton.classList.add('hidden');
+            downloadButton.classList.add('hidden');
+            thumbnailsContainer.innerHTML = '';
+            photostripDisplay.classList.add('hidden');
+            capturedPhotos = []; // Clear previous photos
+
+            showMessage('Get ready!', 1000); // Initial message
+
+            for (let i = 0; i < NUM_PHOTOS; i++) {
+                const photoDataUrl = await capturePhotoWithCountdown();
+                if (photoDataUrl) {
+                    capturedPhotos.push(photoDataUrl);
+                    // Add thumbnail to results area
+                    const thumbnail = document.createElement('img');
+                    thumbnail.src = photoDataUrl;
+                    thumbnail.classList.add('thumbnail');
+                    thumbnailsContainer.appendChild(thumbnail);
+                } else {
+                    showMessage('Photo capture failed for one image.', 3000);
+                    break; // Stop sequence if a photo fails
+                }
+            }
+
+            if (capturedPhotos.length === NUM_PHOTOS) {
+                showMessage('Creating your photostrip...', 2000);
+                await createPhotoStrip(capturedPhotos);
+                retakeButton.classList.remove('hidden'); // Show retake button
+                downloadButton.classList.remove('hidden'); // Show download button
+            } else {
+                showMessage('Photobooth session ended early.', 3000);
+                retakeButton.classList.remove('hidden'); // Allow retake even if partial
+            }
+        }
+
+        /**
+         * Creates a single photostrip image from an array of Data URLs.
+         * @param {string[]} photoDataUrls - Array of Data URLs for captured photos.
+         * @returns {Promise<void>}
+         */
+        async function createPhotoStrip(photoDataUrls) {
+            const finalStripCanvas = document.createElement('canvas');
+            const totalHeight = photoDataUrls.length * PHOTO_HEIGHT_ON_STRIP;
+            const headerHeight = 100; // Space for title and timestamp
+
+            finalStripCanvas.width = STRIP_WIDTH;
+            finalStripCanvas.height = totalHeight + headerHeight;
+            const finalStripCtx = finalStripCanvas.getContext('2d');
+
+            // Fill background of the strip (e.g., white)
+            finalStripCtx.fillStyle = 'white';
+            finalStripCtx.fillRect(0, 0, finalStripCanvas.width, finalStripCanvas.height);
+
+            // Add title and timestamp at the top
+            finalStripCtx.fillStyle = STRIP_TEXT_COLOR;
+            finalStripCtx.font = `${STRIP_FONT_SIZE}px 'Inter'`;
+            finalStripCtx.textAlign = 'center';
+            finalStripCtx.fillText('Awesome Photobooth Fun!', STRIP_WIDTH / 2, STRIP_FONT_SIZE + 10);
+
+            const timestamp = new Date().toLocaleString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: false
+            });
+            finalStripCtx.font = `${STRIP_FONT_SIZE * 0.6}px 'Inter'`; // Smaller font for timestamp
+            finalStripCtx.fillText(timestamp, STRIP_WIDTH / 2, STRIP_FONT_SIZE * 2 + 20);
+
+            let yOffset = headerHeight; // Start drawing photos below the header
+
+            // Draw each photo onto the strip
+            for (const dataUrl of photoDataUrls) {
+                const img = new Image();
+                img.src = dataUrl;
+                await new Promise(resolve => img.onload = resolve); // Wait for image to load
+
+                // Calculate aspect ratio
+                const aspectRatio = img.width / img.height;
+
+                // Determine drawing dimensions to fit within the allocated photo height for the strip
+                let drawWidth = STRIP_WIDTH;
+                let drawHeight = drawWidth / aspectRatio;
+
+                if (drawHeight > PHOTO_HEIGHT_ON_STRIP) {
+                    drawHeight = PHOTO_HEIGHT_ON_STRIP;
+                    drawWidth = drawHeight * aspectRatio;
+                }
+
+                // Center the image within its allocated strip section
+                const xCenterOffset = (STRIP_WIDTH - drawWidth) / 2;
+                const yCenterOffset = (PHOTO_HEIGHT_ON_STRIP - drawHeight) / 2;
+
+                finalStripCtx.drawImage(img, xCenterOffset, yOffset + yCenterOffset, drawWidth, drawHeight);
+                yOffset += PHOTO_HEIGHT_ON_STRIP;
+            }
+
+            // Display the final photostrip
+            const finalStripDataUrl = finalStripCanvas.toDataURL('image/jpeg', 0.95);
+            photostripDisplay.src = finalStripDataUrl;
+            photostripDisplay.classList.remove('hidden'); // Show the final strip
+            downloadButton.href = finalStripDataUrl; // Set download link
+            downloadButton.download = `photobooth_strip_${Date.now()}.jpg`; // Set filename for download
+
+            thumbnailsContainer.innerHTML = ''; // Clear individual thumbnails
+            cameraFeed.style.display = 'none'; // Keep camera feed hidden
+            showMessage('Photostrip created!', 1500);
+        }
+
+        /**
+         * Resets the photobooth to its initial state, ready for a new session.
+         */
+        function resetPhotobooth() {
+            photostripDisplay.classList.add('hidden'); // Hide photostrip
+            thumbnailsContainer.innerHTML = ''; // Clear thumbnails
+            startButton.classList.remove('hidden'); // Show start button
+            retakeButton.classList.add('hidden'); // Hide retake button
+            downloadButton.classList.add('hidden'); // Hide download button
+            cameraFeed.style.display = 'block'; // Show live camera feed
+            countdownDisplay.style.display = 'none'; // Hide countdown
+            capturedPhotos = []; // Clear stored photos
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startCaptureSequence);
+        retakeButton.addEventListener('click', resetPhotobooth);
+
+        // Start camera when the page loads
+        window.onload = startCamera;
+    </script>
+</body>
+</html>
